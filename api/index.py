@@ -3,7 +3,8 @@ import joblib
 
 app = Flask(__name__)
 
-model = joblib.load("models/credit_model.pkl")
+credit_model = joblib.load("models/credit_model.pkl")
+loan_model = joblib.load("models/loan_model.pkl")
 
 @app.route("/")
 def home():
