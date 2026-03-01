@@ -10,21 +10,28 @@ model = joblib.load("models/loan_model.pkl")
 @app.route("/")
 def home():
     return render_template("index.html")
-
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        data = request.json  # frontend must send JSON
-        
-        # Convert input values to float
-        features = [float(value) for value in data.values()]
-        
-        prediction = model.predict([features])
-        
+        data = request.json
+
+        # Use training feature order automatically
+        features = [float(data[col]) for col in credit_model.feature_names_in_]
+        input_data = np.array([features])
+
+        if hasattr(credit_model, "predict_proba"):
+            probability = credit_model.predict_proba(input_data)[0][1]
+            credit_score = int(probability * 100)
+        else:
+            credit_score = int(credit_model.predict(input_data)[0])
+
+        eligible_loan = int(loan_model.predict(input_data)[0])
+
         return jsonify({
-            "prediction": int(prediction[0])
+            "credit_score": credit_score,
+            "eligible_loan": eligible_loan
         })
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
